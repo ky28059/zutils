@@ -157,10 +157,15 @@ let _store_input (task, prop) =
   in
   Sexplib.Sexp.save path (sexp_of_prop Nt.sexp_of_nt (Not prop))
 
+(* TODO: dump to file*)
 let dump_axioms () =
   List.iter
     (fun (name, _, prop) -> Printf.printf "Lemma %s : %s. Admitted.\n" name @@ layout_prop_to_coq prop)
     !raw_axioms
+
+(* TODO: dump to file*)
+let dump_query prop =
+  Printf.printf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed." @@ layout_prop_to_coq prop
 
 (** Unsat means true; otherwise means false *)
 let check_valid (task, prop) =
@@ -173,11 +178,13 @@ let check_valid (task, prop) =
   | SmtUnsat -> true
   | SmtSat model ->
       dump_axioms ();
+      dump_query prop;
       ( _log "model" @@ fun _ ->
         Printf.printf "model:\n%s\n"
         @@ Sugar.short_str 1000 @@ Z3.Model.to_string model );
       false
   | Timeout ->
       dump_axioms ();
+      dump_query prop;
       (_log_queries @@ fun _ -> Pp.printf "@{<bold>SMTTIMEOUT@}\n");
       false
