@@ -3,9 +3,17 @@ open Typectx
 open Sugar
 module Nt = Normalty
 
-let layout_nt_to_rocq ty =
-  let () = Printf.printf "%s\n" (Nt.show_nt ty) in
-  ""
+let rec layout_nt_to_rocq (ty : Nt.t) =
+  match ty with
+  | Ty_var x -> x
+  | Ty_constructor ("bool", _) -> "Prop" (* Map bools to `Prop`s *)
+  | Ty_constructor (name, args) ->
+    spf "%s %s" name
+    @@ String.concat " " @@ List.map layout_nt_to_rocq args
+  | Ty_arrow (lty, rty) -> spf "%s -> %s" (layout_nt_to_rocq lty) (layout_nt_to_rocq rty)
+  | Ty_poly (var, ty') -> spf "forall (%s : Type), %s" var @@ layout_nt_to_rocq ty'
+  (* TODO: record types *)
+  | _ -> "unknown" 
 
 (* TODO: dump to file *)
 let dump_primitives (ctx : Nt.t ctx) =
