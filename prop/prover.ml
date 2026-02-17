@@ -4,7 +4,6 @@ open Goal
 open Sugar
 open Syntax
 open Myconfig
-open To_prop
 module Propencoding = Propencoding
 
 type smt_result = SmtSat of Model.model | SmtUnsat | Timeout
@@ -65,6 +64,7 @@ let get_prover () =
 let get_ctx () = (get_prover ()).ctx
 
 let raw_axioms = ref []
+let type_ctx = ref Typectx.emp
 
 let update_axioms axioms =
   raw_axioms := !raw_axioms @ axioms;
@@ -82,6 +82,10 @@ let update_axioms axioms =
   | None ->
       let p = mk_prover () in
       _prover := Some { p with ax_sys = Axiom.add_laxioms p.ax_sys axioms }
+
+(* TODO? *)
+let register_type_ctx (ctx : Nt.t Typectx.ctx) =
+  type_ctx := ctx
 
 let handle_sat_result solver =
   (* let _ = printf "solver_result\n" in *)
@@ -157,16 +161,6 @@ let _store_input (task, prop) =
   in
   Sexplib.Sexp.save path (sexp_of_prop Nt.sexp_of_nt (Not prop))
 
-(* TODO: dump to file*)
-let dump_axioms () =
-  List.iter
-    (fun (name, _, prop) -> Printf.printf "Lemma %s : %s. Admitted.\n" name @@ layout_prop_to_coq prop)
-    !raw_axioms
-
-(* TODO: dump to file*)
-let dump_query prop =
-  Printf.printf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed." @@ layout_prop_to_coq prop
-
 (** Unsat means true; otherwise means false *)
 let check_valid (task, prop) =
   let () = _store_input (task, prop) in
@@ -177,14 +171,16 @@ let check_valid (task, prop) =
   match check_sat (task, Not prop) with
   | SmtUnsat -> true
   | SmtSat model ->
-      dump_axioms ();
-      dump_query prop;
+      Rocqconv.dump_primitives !type_ctx;
+      Rocqconv.dump_axioms !raw_axioms;
+      Rocqconv.dump_query prop;
       ( _log "model" @@ fun _ ->
         Printf.printf "model:\n%s\n"
         @@ Sugar.short_str 1000 @@ Z3.Model.to_string model );
       false
   | Timeout ->
-      dump_axioms ();
-      dump_query prop;
+      Rocqconv.dump_primitives !type_ctx;
+      Rocqconv.dump_axioms !raw_axioms;
+      Rocqconv.dump_query prop;
       (_log_queries @@ fun _ -> Pp.printf "@{<bold>SMTTIMEOUT@}\n");
       false
