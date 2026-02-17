@@ -4,6 +4,7 @@ open Goal
 open Sugar
 open Syntax
 open Myconfig
+open To_prop
 module Propencoding = Propencoding
 
 type smt_result = SmtSat of Model.model | SmtUnsat | Timeout
@@ -63,7 +64,10 @@ let get_prover () =
 
 let get_ctx () = (get_prover ()).ctx
 
+let raw_axioms = ref []
+
 let update_axioms axioms =
+  raw_axioms := !raw_axioms @ axioms;
   let ctx = get_ctx () in
   let axioms =
     List.map
@@ -153,6 +157,11 @@ let _store_input (task, prop) =
   in
   Sexplib.Sexp.save path (sexp_of_prop Nt.sexp_of_nt (Not prop))
 
+let dump_axioms () =
+  List.iter
+    (fun (name, _, prop) -> Printf.printf "%s %s" name @@ layout_prop_to_coq prop)
+    !raw_axioms
+
 (** Unsat means true; otherwise means false *)
 let check_valid (task, prop) =
   let () = _store_input (task, prop) in
@@ -163,10 +172,12 @@ let check_valid (task, prop) =
   match check_sat (task, Not prop) with
   | SmtUnsat -> true
   | SmtSat model ->
+      dump_axioms ();
       ( _log "model" @@ fun _ ->
         Printf.printf "model:\n%s\n"
         @@ Sugar.short_str 1000 @@ Z3.Model.to_string model );
       false
   | Timeout ->
+      dump_axioms ();
       (_log_queries @@ fun _ -> Pp.printf "@{<bold>SMTTIMEOUT@}\n");
       false
