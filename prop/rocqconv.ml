@@ -3,16 +3,24 @@ open Typectx
 open Sugar
 module Nt = Normalty
 
-let rec layout_nt_to_rocq (ty : Nt.t) =
+let rec layout_nt_to_rocq wrap (ty : Nt.t) =
+  let wrapped s = if wrap then "(" ^ s ^ ")" else s in
   match ty with
   | Ty_var x -> x
   | Ty_constructor ("bool", _) -> "Prop" (* Map bools to `Prop`s *)
   | Ty_constructor (name, args) ->
-    String.concat " " @@ name :: List.map layout_nt_to_rocq args
-  | Ty_arrow (lty, rty) -> spf "%s -> %s" (layout_nt_to_rocq lty) (layout_nt_to_rocq rty)
-  | Ty_poly (var, ty') -> spf "forall {%s : Type}, %s" var @@ layout_nt_to_rocq ty'
+    if List.length args > 0 then
+      wrapped @@ String.concat " " @@ name :: List.map (layout_nt_to_rocq true) args
+    else
+      name
+  | Ty_arrow (lty, rty) -> wrapped @@
+    spf "%s -> %s" (layout_nt_to_rocq false lty) (layout_nt_to_rocq false rty) (* TODO? *)
+  | Ty_poly (var, ty') -> wrapped @@
+    spf "forall {%s : Type}, %s" var @@ layout_nt_to_rocq false ty'
   (* TODO: record types *)
-  | _ -> "unknown" 
+  | _ -> "unknown"
+
+let layout_nt_to_rocq = layout_nt_to_rocq false
 
 let layout_primitives_to_rocq (ctx : Nt.t ctx) =
   String.concat "\n" @@ List.map
