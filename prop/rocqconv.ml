@@ -6,7 +6,7 @@ module Nt = Normalty
 (* TODO: dump to file *)
 let dump_primitives (ctx : Nt.t ctx) =
   List.iter
-    (fun { x; ty } -> Printf.printf "Axiom %s : %s." x @@ Nt.layout_nt ty)
+    (fun { x; ty } -> Printf.printf "Axiom %s : %s.\n" x @@ Nt.layout_nt ty)
     @@ ctx_to_list ctx
 
 (* TODO: dump to file*)
