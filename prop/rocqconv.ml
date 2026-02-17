@@ -15,18 +15,27 @@ let rec layout_nt_to_rocq (ty : Nt.t) =
   (* TODO: record types *)
   | _ -> "unknown" 
 
-(* TODO: dump to file *)
-let dump_primitives (ctx : Nt.t ctx) =
-  List.iter
-    (fun { x; ty } -> Printf.printf "Axiom %s : %s.\n" x @@ layout_nt_to_rocq ty)
+let layout_primitives_to_rocq (ctx : Nt.t ctx) =
+  String.concat "\n" @@ List.map
+    (fun { x; ty } -> spf "Axiom %s : %s." x @@ layout_nt_to_rocq ty)
     @@ ctx_to_list ctx
 
-(* TODO: dump to file*)
-let dump_axioms axioms =
-  List.iter
-    (fun (name, _, prop) -> Printf.printf "Lemma %s : %s. Admitted.\n" name @@ layout_prop_to_coq prop)
+let layout_axioms_to_rocq axioms =
+  String.concat "\n" @@ List.map
+    (fun (name, _, prop) -> spf "Lemma %s : %s. Admitted." name @@ layout_prop_to_coq prop)
     axioms
 
-(* TODO: dump to file*)
-let dump_query prop =
-  Printf.printf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed.\n" @@ layout_prop_to_coq prop
+let layout_query_to_rocq prop =
+  spf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed.\n" @@ layout_prop_to_coq prop
+
+let dump_unsat (ctx: Nt.t ctx) axioms prop =
+  let content = spf "%s\n\n%s\n\n%s"
+    (layout_primitives_to_rocq ctx)
+    (layout_axioms_to_rocq axioms)
+    (layout_query_to_rocq prop)
+  in
+  Out_channel.with_open_text "/tmp/query.v" (fun oc ->
+    Out_channel.output_string oc content;
+    Out_channel.flush oc
+  );
+  Printf.printf "Wrote proof file to /tmp/query.v\n"
