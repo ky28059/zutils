@@ -159,7 +159,7 @@ let _store_input (task, prop) =
 
 let dump_axioms () =
   List.iter
-    (fun (name, _, prop) -> Printf.printf "%s %s" name @@ layout_prop_to_coq prop)
+    (fun (name, _, prop) -> Printf.printf "Lemma %s : %s. Admitted.\n" name @@ layout_prop_to_coq prop)
     !raw_axioms
 
 (** Unsat means true; otherwise means false *)
