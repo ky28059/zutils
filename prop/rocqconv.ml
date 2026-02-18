@@ -39,6 +39,16 @@ let rec layout_lit_to_rocq (lit : Nt.t lit) = (* TODO: wrapping *)
   | AVar { x; _ } -> x
   | ATu tl -> spf "(%s)" @@ String.concat ", " @@ List.map layout_typed_lit tl
   (* TODO: AProj, ARecord, AField? *)
+  (* TODO: better infix op handling? *)
+  | AAppOp ({ x = "=="; _ }, [l; r]) -> spf "%s = %s" (layout_typed_lit l) (layout_typed_lit r)
+  | AAppOp ({ x = "!="; _ }, [l; r]) -> spf "%s <> %s" (layout_typed_lit l) (layout_typed_lit r)
+  | AAppOp ({ x = "<"; _ }, [l; r]) -> spf "%s < %s" (layout_typed_lit l) (layout_typed_lit r)
+  | AAppOp ({ x = "<="; _ }, [l; r]) -> spf "%s <= %s" (layout_typed_lit l) (layout_typed_lit r)
+  | AAppOp ({ x = ">"; _ }, [l; r]) -> spf "%s > %s" (layout_typed_lit l) (layout_typed_lit r)
+  | AAppOp ({ x = ">="; _ }, [l; r]) -> spf "%s >= %s" (layout_typed_lit l) (layout_typed_lit r)
+  | AAppOp ({ x = "+"; _ }, [l; r]) -> spf "%s + %s" (layout_typed_lit l) (layout_typed_lit r)
+  | AAppOp ({ x = "-"; _ }, [l; r]) -> spf "%s - %s" (layout_typed_lit l) (layout_typed_lit r)
+  | AAppOp ({ x = "mod"; _ }, [l; r]) -> spf "%s mod %s" (layout_typed_lit l) (layout_typed_lit r)
   | AAppOp (ft, tl) -> String.concat " " @@ ft.x :: List.map layout_typed_lit tl
   | _ -> "unknown"
 
