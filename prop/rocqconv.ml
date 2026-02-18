@@ -23,9 +23,28 @@ let rec layout_nt_to_rocq wrap (ty : Nt.t) =
 
 let layout_nt_to_rocq = layout_nt_to_rocq false
 
+let layout_const_to_rocq (const : constant) =
+  match const with
+  | U -> "unit"
+  | B b -> if b then "True" else "False"
+  | I i -> string_of_int i
+  | C c -> spf "\"%c\"%%char" c
+  | S s -> spf "\"%s\"%%string" s
+  | F f -> spf "%f%%float" f (* TODO *)
+
+let rec layout_lit_to_rocq (lit : Nt.t lit) = (* TODO: wrapping *)
+  let layout_typed_lit t = layout_lit_to_rocq t.x in
+  match lit with
+  | AC c -> layout_const_to_rocq c
+  | AVar { x; _ } -> x
+  | ATu tl -> spf "(%s)" @@ String.concat ", " @@ List.map layout_typed_lit tl
+  (* TODO: AProj, ARecord, AField? *)
+  | AAppOp (ft, tl) -> String.concat " " @@ ft.x :: List.map layout_typed_lit tl
+  | _ -> "unknown"
+
 let rec layout_prop_to_rocq (prop : Nt.t prop) =
   match prop with
-  | Lit _ -> "lit" (* TODO *)
+  | Lit { x; _ } -> layout_lit_to_rocq x
   | Implies (lp, rp) -> spf "%s -> %s" (layout_prop_to_rocq lp) (layout_prop_to_rocq rp)
   (* TODO ite? *)
   | Not p -> spf "~%s" @@ layout_prop_to_rocq p
@@ -52,13 +71,19 @@ let layout_query_to_rocq prop =
   spf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed.\n" @@ layout_prop_to_rocq prop
 
 let dump_unsat (ctx: Nt.t ctx) axioms prop =
-  let preamble = "From Stdlib Require Import BinInt." in
-  let content = spf "%s\n\n%s\n\n%s\n\n%s"
-    preamble
-    (layout_primitives_to_rocq ctx)
-    (layout_axioms_to_rocq axioms)
-    (layout_query_to_rocq prop)
-  in
+  let preamble = String.concat "\n" [
+    "From Stdlib Require Import BinInt.";
+    "From Stdlib Require Import String.";
+    "From Stdlib Require Import Ascii.";
+    "From Stdlib Require Import Floats.";
+    "Open Scope Z_scope."
+  ] in
+  let content = String.concat "\n\n" [
+    preamble;
+    layout_primitives_to_rocq ctx;
+    layout_axioms_to_rocq axioms;
+    layout_query_to_rocq prop
+  ] in
   Out_channel.with_open_text "/tmp/query.v" (fun oc ->
     Out_channel.output_string oc content;
     Out_channel.flush oc
