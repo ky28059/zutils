@@ -32,25 +32,29 @@ let layout_const_to_rocq (const : constant) =
   | S s -> spf "\"%s\"%%string" s
   | F f -> spf "%f%%float" f (* TODO *)
 
-let rec layout_lit_to_rocq (lit : Nt.t lit) = (* TODO: wrapping *)
-  let layout_typed_lit t = layout_lit_to_rocq t.x in
+let rec layout_lit_to_rocq wrap (lit : Nt.t lit) =
+  let wrapped s = if wrap then "(" ^ s ^ ")" else s in
+  let layout_tl w t = layout_lit_to_rocq w t.x in
   match lit with
   | AC c -> layout_const_to_rocq c
   | AVar { x; _ } -> x
-  | ATu tl -> spf "(%s)" @@ String.concat ", " @@ List.map layout_typed_lit tl
+  | ATu tl -> spf "(%s)" @@ String.concat ", " @@ List.map (layout_tl false) tl
   (* TODO: AProj, ARecord, AField? *)
   (* TODO: better infix op handling? *)
-  | AAppOp ({ x = "=="; _ }, [l; r]) -> spf "%s = %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp ({ x = "!="; _ }, [l; r]) -> spf "%s <> %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp ({ x = "<"; _ }, [l; r]) -> spf "%s < %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp ({ x = "<="; _ }, [l; r]) -> spf "%s <= %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp ({ x = ">"; _ }, [l; r]) -> spf "%s > %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp ({ x = ">="; _ }, [l; r]) -> spf "%s >= %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp ({ x = "+"; _ }, [l; r]) -> spf "%s + %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp ({ x = "-"; _ }, [l; r]) -> spf "%s - %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp ({ x = "mod"; _ }, [l; r]) -> spf "%s mod %s" (layout_typed_lit l) (layout_typed_lit r)
-  | AAppOp (ft, tl) -> String.concat " " @@ ft.x :: List.map layout_typed_lit tl
+  | AAppOp ({ x = "=="; _ }, [l; r]) -> wrapped @@ spf "%s = %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = "!="; _ }, [l; r]) -> wrapped @@ spf "%s <> %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = "<"; _ }, [l; r]) -> wrapped @@ spf "%s < %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = "<="; _ }, [l; r]) -> wrapped @@ spf "%s <= %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = ">"; _ }, [l; r]) -> wrapped @@ spf "%s > %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = ">="; _ }, [l; r]) -> wrapped @@ spf "%s >= %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = "+"; _ }, [l; r]) -> wrapped @@ spf "%s + %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = "-"; _ }, [l; r]) -> wrapped @@ spf "%s - %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = "mod"; _ }, [l; r]) -> wrapped @@ spf "%s mod %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp (ft, tl) -> wrapped @@
+    String.concat " " @@ ft.x :: List.map (layout_tl true) tl
   | _ -> "unknown"
+
+let layout_lit_to_rocq = layout_lit_to_rocq false
 
 let rec layout_prop_to_rocq wrap (prop : Nt.t prop) =
   let wrapped s = if wrap then "(" ^ s ^ ")" else s in
