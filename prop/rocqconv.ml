@@ -42,20 +42,27 @@ let rec layout_lit_to_rocq (lit : Nt.t lit) = (* TODO: wrapping *)
   | AAppOp (ft, tl) -> String.concat " " @@ ft.x :: List.map layout_typed_lit tl
   | _ -> "unknown"
 
-let rec layout_prop_to_rocq (prop : Nt.t prop) =
+let rec layout_prop_to_rocq wrap (prop : Nt.t prop) =
+  let wrapped s = if wrap then "(" ^ s ^ ")" else s in
   match prop with
   | Lit { x; _ } -> layout_lit_to_rocq x
-  | Implies (lp, rp) -> spf "%s -> %s" (layout_prop_to_rocq lp) (layout_prop_to_rocq rp)
+  | Implies (lp, rp) -> wrapped @@
+    spf "%s -> %s" (layout_prop_to_rocq false lp) (layout_prop_to_rocq false rp)
   (* TODO ite? *)
-  | Not p -> spf "~%s" @@ layout_prop_to_rocq p
-  | And pl -> String.concat " /\\ " @@ List.map layout_prop_to_rocq pl
-  | Or pl -> String.concat " \\/ " @@ List.map layout_prop_to_rocq pl
-  | Iff (lp, rp) -> spf "%s <-> %s" (layout_prop_to_rocq lp) (layout_prop_to_rocq rp)
-  | Forall { qv = { x; ty }; body } ->
-    spf "forall (%s : %s), %s" x (layout_nt_to_rocq ty) (layout_prop_to_rocq body)
-  | Exists { qv = { x; ty }; body } ->
-    spf "exists (%s : %s), %s" x (layout_nt_to_rocq ty) (layout_prop_to_rocq body)
+  | Not p -> spf "~%s" @@ layout_prop_to_rocq true p
+  | And pl -> wrapped @@
+    String.concat " /\\ " @@ List.map (layout_prop_to_rocq true) pl
+  | Or pl -> wrapped @@
+    String.concat " \\/ " @@ List.map (layout_prop_to_rocq true) pl
+  | Iff (lp, rp) -> wrapped @@
+    spf "%s <-> %s" (layout_prop_to_rocq false lp) (layout_prop_to_rocq false rp)
+  | Forall { qv = { x; ty }; body } -> wrapped @@
+    spf "forall (%s : %s), %s" x (layout_nt_to_rocq ty) (layout_prop_to_rocq false body)
+  | Exists { qv = { x; ty }; body } -> wrapped @@
+    spf "exists (%s : %s), %s" x (layout_nt_to_rocq ty) (layout_prop_to_rocq false body)
   | _ -> "unknown"
+
+let layout_prop_to_rocq = layout_prop_to_rocq false
 
 let layout_primitives_to_rocq (ctx : Nt.t ctx) =
   String.concat "\n" @@ List.map
