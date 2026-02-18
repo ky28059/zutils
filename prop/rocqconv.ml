@@ -1,6 +1,6 @@
-open To_prop
 open Typectx
 open Sugar
+open Ast
 module Nt = Normalty
 
 let rec layout_nt_to_rocq wrap (ty : Nt.t) =
@@ -23,6 +23,21 @@ let rec layout_nt_to_rocq wrap (ty : Nt.t) =
 
 let layout_nt_to_rocq = layout_nt_to_rocq false
 
+let rec layout_prop_to_rocq (prop : Nt.t prop) =
+  match prop with
+  | Lit _ -> "lit" (* TODO *)
+  | Implies (lp, rp) -> spf "%s -> %s" (layout_prop_to_rocq lp) (layout_prop_to_rocq rp)
+  (* TODO ite? *)
+  | Not p -> spf "~%s" @@ layout_prop_to_rocq p
+  | And pl -> String.concat " /\\ " @@ List.map layout_prop_to_rocq pl
+  | Or pl -> String.concat " \\/ " @@ List.map layout_prop_to_rocq pl
+  | Iff (lp, rp) -> spf "%s <-> %s" (layout_prop_to_rocq lp) (layout_prop_to_rocq rp)
+  | Forall { qv = { x; ty }; body } ->
+    spf "forall (%s : %s), %s" x (layout_nt_to_rocq ty) (layout_prop_to_rocq body)
+  | Exists { qv = { x; ty }; body } ->
+    spf "exists (%s : %s), %s" x (layout_nt_to_rocq ty) (layout_prop_to_rocq body)
+  | _ -> "unknown"
+
 let layout_primitives_to_rocq (ctx : Nt.t ctx) =
   String.concat "\n" @@ List.map
     (fun { x; ty } -> spf "Axiom %s : %s." x @@ layout_nt_to_rocq ty)
@@ -30,11 +45,11 @@ let layout_primitives_to_rocq (ctx : Nt.t ctx) =
 
 let layout_axioms_to_rocq axioms =
   String.concat "\n" @@ List.map
-    (fun (name, _, prop) -> spf "Lemma %s : %s. Admitted." name @@ layout_prop_to_coq prop)
+    (fun (name, _, prop) -> spf "Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop)
     axioms
 
 let layout_query_to_rocq prop =
-  spf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed.\n" @@ layout_prop_to_coq prop
+  spf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed.\n" @@ layout_prop_to_rocq prop
 
 let dump_unsat (ctx: Nt.t ctx) axioms prop =
   let preamble = "From Stdlib Require Import BinInt." in
