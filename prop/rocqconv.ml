@@ -8,6 +8,7 @@ let rec layout_nt_to_rocq wrap (ty : Nt.t) =
   match ty with
   | Ty_var x -> x
   | Ty_constructor ("bool", _) -> "Prop" (* Map bools to `Prop`s *)
+  | Ty_constructor ("int", _) -> "Z" (* Map ints to `Stdlib.BinInt.Z`s *)
   | Ty_constructor (name, args) ->
     if List.length args > 0 then
       wrapped @@ String.concat " " @@ name :: List.map (layout_nt_to_rocq true) args
@@ -36,7 +37,9 @@ let layout_query_to_rocq prop =
   spf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed.\n" @@ layout_prop_to_coq prop
 
 let dump_unsat (ctx: Nt.t ctx) axioms prop =
-  let content = spf "%s\n\n%s\n\n%s"
+  let preamble = "From Stdlib Require Import BinInt." in
+  let content = spf "%s\n\n%s\n\n%s\n\n%s"
+    preamble
     (layout_primitives_to_rocq ctx)
     (layout_axioms_to_rocq axioms)
     (layout_query_to_rocq prop)
