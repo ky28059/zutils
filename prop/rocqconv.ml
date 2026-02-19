@@ -78,18 +78,26 @@ let rec layout_prop_to_rocq wrap (prop : Nt.t prop) =
 
 let layout_prop_to_rocq = layout_prop_to_rocq false
 
-let layout_primitives_to_rocq (ctx : Nt.t ctx) =
-  String.concat "\n" @@ List.map
-    (fun { x; ty } -> spf "Parameter %s : %s." x @@ layout_nt_to_rocq ty)
-    @@ ctx_to_list ctx
+let mk_signature_module (ctx : Nt.t ctx) axioms = (* TODO: indent? *)
+  let defs = String.concat "\n" @@ List.map
+    (fun { x; ty } -> spf "  Parameter %s : %s." x @@ layout_nt_to_rocq ty)
+    @@ ctx_to_list ctx in
+  let axs = String.concat "\n" @@ List.map
+    (fun (name, _, prop) -> spf "  Axiom %s : %s." name @@ layout_prop_to_rocq prop)
+    axioms in
+  spf "Module Type Signatures\n%s\nEnd Signatures."
+    @@ defs ^ "\n\n" ^ axs
 
-let layout_axioms_to_rocq axioms =
-  String.concat "\n" @@ List.map
-    (fun (name, _, prop) -> spf "Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop)
-    axioms
+let mk_axioms_module (_ctx : Nt.t ctx) axioms = (* TODO: indent? *)
+  let axs = String.concat "\n" @@ List.map
+    (fun (name, _, prop) -> spf "  Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop)
+    axioms in
+  spf "Module Axioms : Signatures\n%s\nEnd Axioms."
+    @@ "(* ... *)" ^ "\n\n" ^ axs (* TODO: hard-coded definitions *)
 
-let layout_query_to_rocq prop =
-  spf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed.\n" @@ layout_prop_to_rocq prop
+let mk_goal_module prop =
+  spf "Module Goal.\n  Import Axioms.\n\n  Theorem goal : %s.\n  Proof.\n    (* ... *)\n  Qed.\nEnd Goal."
+    @@ layout_prop_to_rocq prop
 
 let dump_unsat (ctx: Nt.t ctx) axioms prop =
   let imports = String.concat "\n" [
@@ -99,15 +107,11 @@ let dump_unsat (ctx: Nt.t ctx) axioms prop =
     "From Stdlib Require Import Floats.";
     "Open Scope Z_scope."
   ] in
-  let typedefs = String.concat "\n" [ (* `list` and `option` are built-in *)
-    "Inductive tree (a: Type) : Type."
-  ] in
   let content = String.concat "\n\n" [
     imports;
-    typedefs;
-    layout_primitives_to_rocq ctx;
-    layout_axioms_to_rocq axioms;
-    layout_query_to_rocq prop
+    mk_signature_module ctx axioms;
+    mk_axioms_module ctx axioms;
+    mk_goal_module prop
   ] in
   Out_channel.with_open_text "/tmp/query.v" (fun oc -> (* TODO: take file path as arg? *)
     Out_channel.output_string oc content;
