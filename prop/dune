@@ -20,6 +20,7 @@
   to_prop
   to_axiom
   to_ctx
+  to_rocq
   front
   ;; Typecheck
   normal_constant_typing
