@@ -14,14 +14,16 @@ let mk_signature_module (ctx : Nt.t ctx) axioms = (* TODO: indent? *)
     @@ defs ^ "\n\n" ^ axs
 
 let mk_axioms_module (ctx : Nt.t ctx) axioms = (* TODO: indent? *)
-  let layout_builtin { x; ty } = 
+  let layout_builtin { x; ty } =
     match Hashtbl.find_opt built_in_defs x with
     | Some x -> x
     | None -> spf "  Parameter %s : %s." x @@ layout_nt_to_rocq ty in
+  let layout_axiom (name, _, prop) =
+    match Hashtbl.find_opt built_in_proofs name with
+    | Some x -> x
+    | None -> spf "  Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop in
   let defs = String.concat "\n" @@ List.map layout_builtin @@ ctx_to_list ctx in
-  let axs = String.concat "\n" @@ List.map
-    (fun (name, _, prop) -> spf "  Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop)
-    axioms in
+  let axs = String.concat "\n" @@ List.map layout_axiom axioms in
   spf "Module Axioms : Signatures.\n%s\nEnd Axioms."
     @@ defs ^ "\n\n" ^ axs
 
