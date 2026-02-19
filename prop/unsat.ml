@@ -1,6 +1,7 @@
 open Typectx
 open Sugar
 open Front
+open Rocqconv
 
 let mk_signature_module (ctx : Nt.t ctx) axioms = (* TODO: indent? *)
   let defs = String.concat "\n" @@ List.map
@@ -12,12 +13,17 @@ let mk_signature_module (ctx : Nt.t ctx) axioms = (* TODO: indent? *)
   spf "Module Type Signatures\n%s\nEnd Signatures."
     @@ defs ^ "\n\n" ^ axs
 
-let mk_axioms_module (_ctx : Nt.t ctx) axioms = (* TODO: indent? *)
+let mk_axioms_module (ctx : Nt.t ctx) axioms = (* TODO: indent? *)
+  let layout_builtin { x; ty } = 
+    match Hashtbl.find_opt built_in_defs x with
+    | Some x -> x
+    | None -> spf "  Parameter %s : %s." x @@ layout_nt_to_rocq ty in
+  let defs = String.concat "\n\n" @@ List.map layout_builtin @@ ctx_to_list ctx in
   let axs = String.concat "\n" @@ List.map
     (fun (name, _, prop) -> spf "  Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop)
     axioms in
   spf "Module Axioms : Signatures\n%s\nEnd Axioms."
-    @@ "(* ... *)" ^ "\n\n" ^ axs (* TODO: hard-coded definitions *)
+    @@ defs ^ "\n\n" ^ axs
 
 let mk_goal_module prop =
   spf "Module Goal.\n  Import Axioms.\n\n  Theorem goal : %s.\n  Proof.\n    (* ... *)\n  Qed.\nEnd Goal."
