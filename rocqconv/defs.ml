@@ -1,6 +1,19 @@
 module Nt = Normalty
 open Sugar
 
+let built_in_type_sigs = [
+  "Parameter tree : forall (a : Type), Type."
+]
+
+let built_in_type_defs = [
+  {|
+  Inductive tree' (a : Type) : Type :=
+  | Leaf : tree' a
+  | Node : a -> tree' a -> tree' a -> tree' a.
+  Definition tree := tree'.
+  |}
+]
+
 let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
   ("hd", {|
   Definition hd {a : Type} (l : list a) (n : a) : Prop :=
@@ -179,7 +192,10 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
 
 module StringSet = Set.Make(String)
 
-let builtins = StringSet.of_list ["=="; "!="; "<"; "<="; ">"; ">="; "+"; "-"; "mod"; "True"; "False"]
+let builtins = StringSet.of_list [
+  "=="; "!="; "<"; "<="; ">"; ">="; "+"; "-"; "mod"; "True"; "False";
+  "Nil"; "Cons"; "Leaf"; "Node"; "None"; "Some"  (* Ignore custom constructors in proof file generation; TODO? *)
+]
 
 let remove_builtins (types : (Nt.t, string) typed list) =
   List.filter (fun { x; _ } -> not @@ StringSet.mem x builtins) types

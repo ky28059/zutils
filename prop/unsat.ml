@@ -3,17 +3,18 @@ open Sugar
 open Front
 open Rocqconv
 
-let mk_signature_module types axioms = (* TODO: indent? *)
+let mk_signature_module preds axioms = (* TODO: indent? *)
+  let types = String.concat "\n" @@ built_in_type_sigs in
   let defs = String.concat "\n" @@ List.map
     (fun { x; ty } -> spf "  Parameter %s : %s." x @@ layout_nt_to_rocq ty)
-    types in
+    preds in
   let axs = String.concat "\n" @@ List.map
     (fun (name, _, prop) -> spf "  Axiom %s : %s." name @@ layout_prop_to_rocq prop)
     axioms in
   spf "Module Type Signatures.\n%s\nEnd Signatures."
-    @@ defs ^ "\n\n" ^ axs
+    @@ String.concat "\n\n" [types; defs; axs]
 
-let mk_axioms_module types axioms = (* TODO: indent? *)
+let mk_axioms_module preds axioms = (* TODO: indent? *)
   let layout_builtin { x; ty } =
     match Hashtbl.find_opt built_in_defs x with
     | Some x -> x
@@ -22,10 +23,11 @@ let mk_axioms_module types axioms = (* TODO: indent? *)
     match Hashtbl.find_opt built_in_proofs name with
     | Some x -> x
     | None -> spf "  Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop in
-  let defs = String.concat "\n" @@ List.map layout_builtin types in
+  let types = String.concat "\n" built_in_type_defs in
+  let defs = String.concat "\n" @@ List.map layout_builtin preds in
   let axs = String.concat "\n" @@ List.map layout_axiom axioms in
   spf "Module Axioms : Signatures.\n%s\nEnd Axioms."
-    @@ defs ^ "\n\n" ^ axs
+    @@ String.concat "\n\n" [types; defs; axs]
 
 let mk_goal_module prop =
   spf "Module Goal.\n  Import Axioms.\n\n  Theorem goal : %s.\n  Proof.\n    (* ... *)\n  Qed.\nEnd Goal.\n"
