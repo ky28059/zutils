@@ -3,4 +3,4 @@
  (public_name zutils.rocqconv)
  (wrapped true)
  (modules defs rocqconv)
- (libraries core))
+ (libraries core sugar normalty))

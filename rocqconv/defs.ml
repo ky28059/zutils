@@ -1,9 +1,19 @@
+module Nt = Normalty
+open Sugar
+
 let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
   ("hd", {|
   Definition hd {a : Type} (l : list a) (n : a) : Prop :=
     match l with
     | nil => False
     | cons n' _ => n = n'
+    end.
+  |});
+  ("tl", {|
+  Definition tl {a : Type} (l : list a) (xs : list a) : Prop :=
+    match l with
+    | nil => False
+    | cons _ xs' => xs = xs'
     end.
   |});
   ("len", {|
@@ -33,6 +43,20 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
     | nil => True
     | cons x xs => ~(list_mem xs x) /\ uniq xs
     end.
+  |});
+  ("leaf", {|
+  Definition leaf {a : Type} (t : tree a) : Prop :=
+    match t with
+    | Leaf _ => True
+    | Node _ _ _ _ => False
+    end.
+  |});
+  ("root", {|
+  Definition root {a : Type} (t : tree a) (x : a) : Prop :=
+    match t with
+    | Leaf _ => False
+    | Node _ x' _ _ => x = x'
+    end.
   |})
 ]
 
@@ -41,8 +65,24 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
   Lemma list_emp_no_hd : forall (l : list Z), forall (x : Z), emp l -> ~hd l x.
   Proof.
     intros [| x'] x H.
-    - intros H1. contradiction.
+    - intros [].
     - contradiction. 
+  Qed.
+  |});
+  ("list_emp_no_tl", {|
+  Lemma list_emp_no_tl : forall (l : list Z), forall (l1 : list Z), emp l -> ~tl l l1.
+  Proof.
+    intros [| x] l1 H.
+    - intros [].
+    - contradiction.
+  Qed.
+  |});
+  ("list_no_emp_exists_tl", {|
+  Lemma list_no_emp_exists_tl : forall (l : list Z), exists (l1 : list Z), ~emp l -> tl l l1.
+  Proof.
+    intros [| x xs].
+    - exists nil. intros []. reflexivity.
+    - exists xs. intros H. simpl. reflexivity.
   Qed.
   |});
   ("list_no_emp_exists_hd", {|
@@ -58,7 +98,15 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
   Proof.
     intros [| x'] x H.
     - contradiction.
-    - intros H2. contradiction. 
+    - intros []. 
+  Qed.
+  |});
+  ("list_tl_no_emp", {|
+  Lemma list_tl_no_emp : forall (l : list Z), forall (l1 : list Z), tl l l1 -> ~emp l.
+  Proof.
+    intros [| x xs] l1 H.
+    - contradiction.
+    - intros [].
   Qed.
   |});
   ("list_len_0_emp", {|
@@ -83,6 +131,24 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
     intros [| x] n [Hl Hn].
     - inversion Hl as [Hn']. rewrite Hn' in Hn. inversion Hn.
     - intros H. contradiction.
+  Qed.
+  |});
+  ("list_tl_len_plus_1", {|
+  Lemma plus_1_minus_1_id : forall (n : Z), n + 1 - 1 = n.
+  Proof.
+    intros n.
+    rewrite Z.add_1_r.
+    rewrite Z.sub_1_r.
+    rewrite Z.pred_succ.
+    reflexivity.
+  Qed.
+
+  Lemma list_tl_len_plus_1 : forall (l : list Z), forall (l1 : list Z), forall (n : Z), tl l l1 -> len l1 n <-> len l (n + 1).
+  Proof.
+    intros [| x xs] l1 n H; try contradiction.
+    split; intros H1.
+    - simpl in H. simpl. rewrite <- H. rewrite plus_1_minus_1_id. assumption.
+    - simpl in H1. simpl in H. rewrite H. rewrite plus_1_minus_1_id in H1. assumption.
   Qed.
   |});
   ("list_hd_is_mem", {|
@@ -110,3 +176,10 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
   Qed.
   |})
 ]
+
+module StringSet = Set.Make(String)
+
+let builtins = StringSet.of_list ["=="; "!="; "<"; "<="; ">"; ">="; "+"; "-"; "mod"; "True"; "False"]
+
+let remove_builtins (types : (Nt.t, string) typed list) =
+  List.filter (fun { x; _ } -> not @@ StringSet.mem x builtins) types
