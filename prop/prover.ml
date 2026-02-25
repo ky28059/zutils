@@ -171,12 +171,12 @@ let check_valid (task, prop) =
   match check_sat (task, Not prop) with
   | SmtUnsat -> true
   | SmtSat model ->
-      Rocqconv.dump_unsat !type_ctx !raw_axioms prop;
+      Unsat.dump_unsat !type_ctx !raw_axioms prop;
       ( _log "model" @@ fun _ ->
         Printf.printf "model:\n%s\n"
         @@ Sugar.short_str 1000 @@ Z3.Model.to_string model );
       false
   | Timeout ->
-      Rocqconv.dump_unsat !type_ctx !raw_axioms prop;
+      Unsat.dump_unsat !type_ctx !raw_axioms prop;
       (_log_queries @@ fun _ -> Pp.printf "@{<bold>SMTTIMEOUT@}\n");
       false

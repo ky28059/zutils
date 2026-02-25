@@ -1,4 +1,3 @@
-open Typectx
 open Sugar
 open Ast
 module Nt = Normalty
@@ -77,40 +76,3 @@ let rec layout_prop_to_rocq wrap (prop : Nt.t prop) =
   | _ -> "unknown"
 
 let layout_prop_to_rocq = layout_prop_to_rocq false
-
-let layout_primitives_to_rocq (ctx : Nt.t ctx) =
-  String.concat "\n" @@ List.map
-    (fun { x; ty } -> spf "Parameter %s : %s." x @@ layout_nt_to_rocq ty)
-    @@ ctx_to_list ctx
-
-let layout_axioms_to_rocq axioms =
-  String.concat "\n" @@ List.map
-    (fun (name, _, prop) -> spf "Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop)
-    axioms
-
-let layout_query_to_rocq prop =
-  spf "Theorem goal : %s.\nProof.\n  (* ... *)\nQed.\n" @@ layout_prop_to_rocq prop
-
-let dump_unsat (ctx: Nt.t ctx) axioms prop =
-  let imports = String.concat "\n" [
-    "From Stdlib Require Import BinInt.";
-    "From Stdlib Require Import String.";
-    "From Stdlib Require Import Ascii.";
-    "From Stdlib Require Import Floats.";
-    "Open Scope Z_scope."
-  ] in
-  let typedefs = String.concat "\n" [ (* `list` and `option` are built-in *)
-    "Inductive tree (a: Type) : Type."
-  ] in
-  let content = String.concat "\n\n" [
-    imports;
-    typedefs;
-    layout_primitives_to_rocq ctx;
-    layout_axioms_to_rocq axioms;
-    layout_query_to_rocq prop
-  ] in
-  Out_channel.with_open_text "/tmp/query.v" (fun oc -> (* TODO: take file path as arg? *)
-    Out_channel.output_string oc content;
-    Out_channel.flush oc
-  );
-  Printf.printf "Wrote proof file to /tmp/query.v\n"
