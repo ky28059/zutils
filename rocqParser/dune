@@ -1,0 +1,14 @@
+(library
+ (name rocqParser)
+ (public_name zutils.rocqParser)
+ (wrapped true)
+ (modules defs front init layout parser rocqParser)
+ (libraries
+  core
+  sugar
+  normalty
+  rocq-runtime.engine
+  rocq-runtime.vernac
+  coq-core.toplevel
+  coq-core.library
+  coq-core.plugins.ltac))

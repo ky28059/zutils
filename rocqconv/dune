@@ -1,6 +1,0 @@
-(library
- (name rocqconv)
- (public_name zutils.rocqconv)
- (wrapped true)
- (modules defs rocqconv)
- (libraries core sugar normalty))
