@@ -5,9 +5,6 @@ open Constrexpr
 open Names
 open Libnames
 
-let string_of_vernac v =
-  Pp.string_of_ppcmds @@ Ppvernac.pr_vernac v
-
 let string_of_lident (l : lident) =
   "\"" ^ Id.to_string l.v ^ "\""
 

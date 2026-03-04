@@ -7,8 +7,5 @@
   core
   sugar
   normalty
-  rocq-runtime.engine
   rocq-runtime.vernac
-  coq-core.toplevel
-  coq-core.library
-  coq-core.plugins.ltac))
+  rocq-runtime.sysinit))

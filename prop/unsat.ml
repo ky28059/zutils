@@ -1,10 +1,9 @@
 open Typectx
 open Sugar
 open Front
-open Rocqconv
 
 let mk_signature_module preds axioms = (* TODO: indent? *)
-  let types = String.concat "\n" @@ built_in_type_sigs in
+  let types = String.concat "\n" @@ RocqParser.built_in_type_sigs in
   let defs = String.concat "\n" @@ List.map
     (fun { x; ty } -> spf "  Parameter %s : %s." x @@ layout_nt_to_rocq ty)
     preds in
@@ -16,14 +15,14 @@ let mk_signature_module preds axioms = (* TODO: indent? *)
 
 let mk_axioms_module preds axioms = (* TODO: indent? *)
   let layout_builtin { x; ty } =
-    match Hashtbl.find_opt built_in_defs x with
+    match Hashtbl.find_opt RocqParser.built_in_defs x with
     | Some x -> x
     | None -> spf "  Parameter %s : %s." x @@ layout_nt_to_rocq ty in
   let layout_axiom (name, _, prop) =
-    match Hashtbl.find_opt built_in_proofs name with
+    match Hashtbl.find_opt RocqParser.built_in_proofs name with
     | Some x -> x
     | None -> spf "  Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop in
-  let types = String.concat "\n" built_in_type_defs in
+  let types = String.concat "\n" RocqParser.built_in_type_defs in
   let defs = String.concat "\n" @@ List.map layout_builtin preds in
   let axs = String.concat "\n" @@ List.map layout_axiom axioms in
   spf "Module Axioms : Signatures.\n%s\nEnd Axioms."
@@ -41,7 +40,7 @@ let dump_unsat (ctx: Nt.t ctx) axioms prop =
     "From Stdlib Require Import Floats.";
     "Open Scope Z_scope."
   ] in
-  let types = remove_builtins @@ ctx_to_list ctx in
+  let types = RocqParser.remove_builtins @@ ctx_to_list ctx in
   let content = String.concat "\n\n" [
     imports;
     mk_signature_module types axioms;

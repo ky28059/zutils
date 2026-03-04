@@ -19,7 +19,11 @@
  (name zutils)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune)
+ (depends
+  ocaml
+  dune
+  (spectrum (>= 0.6.0))
+  (rocq-runtime (>= 9.0.1)))
  (tags
   (topics "to describe" your project)))
 
