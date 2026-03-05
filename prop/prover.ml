@@ -172,11 +172,13 @@ let check_valid (task, prop) =
   | SmtUnsat -> true
   | SmtSat model ->
       Unsat.dump_unsat !type_ctx !raw_axioms prop;
+      List.iter (fun x -> print_endline @@ RocqParser.string_of_vernac_ast x) @@ RocqParser.parse_file "/tmp/query.v";
       ( _log "model" @@ fun _ ->
         Printf.printf "model:\n%s\n"
         @@ Sugar.short_str 1000 @@ Z3.Model.to_string model );
       false
   | Timeout ->
       Unsat.dump_unsat !type_ctx !raw_axioms prop;
+      List.iter (fun x -> print_endline @@ RocqParser.string_of_vernac_ast x) @@ RocqParser.parse_file "/tmp/query.v";
       (_log_queries @@ fun _ -> Pp.printf "@{<bold>SMTTIMEOUT@}\n");
       false

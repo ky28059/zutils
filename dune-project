@@ -22,6 +22,14 @@
  (depends
   ocaml
   dune
+  core
+  z3
+  dolog
+  ppx_deriving_yojson
+  ppx_here
+  ppx_optcomp
+  ppx_compare
+  ppx_inline_test
   (spectrum (>= 0.6.0))
   (rocq-runtime (>= 9.0.1)))
  (tags

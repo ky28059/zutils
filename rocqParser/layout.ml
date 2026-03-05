@@ -27,7 +27,7 @@ let string_of_prim_token p =
 let string_of_notation_entry e =
   match e with
   | InConstrEntry -> "InConstrEntry"
-  | InCustomEntry s -> spf "(InCustomEntry \"%s\")" s
+  | InCustomEntry s -> spf "(InCustomEntry \"%s\")" (Id.to_string @@ Names.KerName.label s)
 
 let string_of_notation (e, n) =
   spf "(%s, \"%s\")" (string_of_notation_entry e) n
@@ -130,7 +130,7 @@ let string_of_synterp p =
   | VernacLoad (_, s) -> spf "(VernacLoad (..., \"%s\"))" s
   | VernacReservedNotation (_, _) -> "(VernacReservedNotation ...)"
   | VernacNotation (_, _) -> "(VernacNotation ...)"
-  | VernacDeclareCustomEntry s -> spf "(VernacDeclareCustomEntry \"%s\")" s
+  | VernacDeclareCustomEntry s -> spf "(VernacDeclareCustomEntry \"%s\")" (Id.to_string s)
   | VernacBeginSection l -> spf "(VernacBeginSection %s)" @@ string_of_lident l
   | VernacEndSegment l -> spf "(VernacEndSegment %s)" @@ string_of_lident l
   | VernacRequire (id_opt, _, _) ->
