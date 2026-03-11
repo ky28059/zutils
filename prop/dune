@@ -5,7 +5,7 @@
  (public_name zutils.prop)
  (wrapped true)
  (modules_without_implementation)
- (libraries sugar normalty core ocamlParser rocqParser ppxlib z3 myconfig typectx)
+ (libraries sugar normalty core ocamlParser ppxlib z3 myconfig typectx)
  (modules
   prop
   ast
@@ -36,6 +36,7 @@
   simplProp
   prover
   unsat
+  rocqdefs
   test)
  (preprocess
   (pps

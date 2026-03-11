@@ -30,8 +30,7 @@
   ppx_optcomp
   ppx_compare
   ppx_inline_test
-  (spectrum (>= 0.6.0))
-  (rocq-runtime (>= 9.0.1)))
+  (spectrum (>= 0.6.0)))
  (tags
   (topics "to describe" your project)))
 

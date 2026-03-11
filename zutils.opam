@@ -21,7 +21,6 @@ depends: [
   "ppx_compare"
   "ppx_inline_test"
   "spectrum" {>= "0.6.0"}
-  "rocq-runtime" {>= "9.0.1"}
   "odoc" {with-doc}
 ]
 build: [
