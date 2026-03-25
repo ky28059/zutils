@@ -33,7 +33,7 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
   Fixpoint len {a : Type} (l : list a) (n : Z) : Prop :=
     match l with
     | nil => n = 0
-    | cons _ xs => len xs (n - 1)
+    | cons _ xs => n > 0 /\ len xs (n - 1)
     end.
   |});
   ("emp", {|
@@ -69,6 +69,27 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
     match t with
     | Leaf _ => False
     | Node _ x' _ _ => x = x'
+    end.
+  |});
+  ("lch", {|
+  Definition lch {a : Type} (t : tree a) (l : tree a) : Prop :=
+    match t with
+    | Leaf _ => False
+    | Node _ _ lch _ => lch = l
+    end.
+  |});
+  ("rch", {|
+  Definition rch {a : Type} (t : tree a) (r : tree a) : Prop :=
+    match t with
+    | Leaf _ => False
+    | Node _ _ _ rch => rch = r
+    end.
+  |});
+  ("tree_mem", {|
+  Fixpoint tree_mem {a : Type} (t : tree a) (e : a) : Prop :=
+    match t with
+    | Leaf _ => False
+    | Node _ v lch rch => v = e \/ tree_mem lch e \/ tree_mem rch e
     end.
   |})
 ]
@@ -126,7 +147,7 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
   Lemma list_len_0_emp : forall (l : list Z), emp l -> len l 0.
   Proof.
     intros [| x] H.
-    - simpl. reflexivity.
+    - reflexivity.
     - contradiction.
   Qed.
   |});

@@ -16,13 +16,13 @@ let mk_signature_module preds axioms = (* TODO: indent? *)
 let mk_axioms_module preds axioms = (* TODO: indent? *)
   let layout_builtin { x; ty } =
     match Hashtbl.find_opt Rocqdefs.built_in_defs x with
-    | Some x -> x
+    | Some x -> "  " ^ String.trim x
     | None -> spf "  Parameter %s : %s." x @@ layout_nt_to_rocq ty in
   let layout_axiom (name, _, prop) =
     match Hashtbl.find_opt Rocqdefs.built_in_proofs name with
-    | Some x -> x
+    | Some x -> "  " ^ String.trim x
     | None -> spf "  Lemma %s : %s. Admitted." name @@ layout_prop_to_rocq prop in
-  let types = String.concat "\n" Rocqdefs.built_in_type_defs in
+  let types = String.concat "\n" @@ List.map (fun s -> "  " ^ String.trim s) Rocqdefs.built_in_type_defs in
   let defs = String.concat "\n" @@ List.map layout_builtin preds in
   let axs = String.concat "\n" @@ List.map layout_axiom axioms in
   spf "Module Axioms : Signatures.\n%s\nEnd Axioms."
