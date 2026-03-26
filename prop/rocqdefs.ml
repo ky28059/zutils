@@ -184,21 +184,19 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
   Qed.
   |});
   ("list_tl_len_plus_1", {|
-  Lemma plus_1_minus_1_id : forall (n : Z), n + 1 - 1 = n.
-  Proof.
-    intros n.
-    rewrite Z.add_1_r.
-    rewrite Z.sub_1_r.
-    rewrite Z.pred_succ.
-    reflexivity.
-  Qed.
-
   Lemma list_tl_len_plus_1 : forall (l : list Z), forall (l1 : list Z), forall (n : Z), tl l l1 -> len l1 n <-> len l (n + 1).
   Proof.
-    intros [| x xs] l1 n H; try contradiction.
-    split; intros H1.
-    - simpl in H. simpl. rewrite <- H. rewrite plus_1_minus_1_id. assumption.
-    - simpl in H1. simpl in H. rewrite H. rewrite plus_1_minus_1_id in H1. assumption.
+    intros [| x] l1 n Ht; split;
+    try contradiction;
+    inversion Ht; intros Hl.
+    - simpl. split.
+      * apply list_len_geq_0 in Hl.
+        intuition.
+      * replace (n + 1 - 1) with n by intuition.
+        assumption.
+    - simpl in Hl. destruct Hl.
+      replace (n + 1 - 1) with n in H1 by intuition.
+      assumption.
   Qed.
   |});
   ("list_hd_is_mem", {|
