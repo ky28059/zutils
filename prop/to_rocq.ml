@@ -48,6 +48,8 @@ let rec layout_lit_to_rocq wrap (lit : Nt.t lit) =
   | AAppOp ({ x = ">="; _ }, [l; r]) -> wrapped @@ spf "%s >= %s" (layout_tl true l) (layout_tl true r)
   | AAppOp ({ x = "+"; _ }, [l; r]) -> wrapped @@ spf "%s + %s" (layout_tl true l) (layout_tl true r)
   | AAppOp ({ x = "-"; _ }, [l; r]) -> wrapped @@ spf "%s - %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = "*"; _ }, [l; r]) -> wrapped @@ spf "%s * %s" (layout_tl true l) (layout_tl true r)
+  | AAppOp ({ x = "/"; _ }, [l; r]) -> wrapped @@ spf "%s / %s" (layout_tl true l) (layout_tl true r)
   | AAppOp ({ x = "mod"; _ }, [l; r]) -> wrapped @@ spf "%s mod %s" (layout_tl true l) (layout_tl true r)
   | AAppOp (ft, tl) -> wrapped @@
     String.concat " " @@ ft.x :: List.map (layout_tl true) tl
@@ -60,7 +62,7 @@ let rec layout_prop_to_rocq wrap (prop : Nt.t prop) =
   match prop with
   | Lit { x; _ } -> layout_lit_to_rocq x
   | Implies (lp, rp) -> wrapped @@
-    spf "%s -> %s" (layout_prop_to_rocq false lp) (layout_prop_to_rocq false rp)
+    spf "%s -> %s" (layout_prop_to_rocq true lp) (layout_prop_to_rocq true rp)
   (* TODO ite? *)
   | Not p -> spf "~%s" @@ layout_prop_to_rocq true p
   | And pl -> wrapped @@
@@ -68,7 +70,7 @@ let rec layout_prop_to_rocq wrap (prop : Nt.t prop) =
   | Or pl -> wrapped @@
     String.concat " \\/ " @@ List.map (layout_prop_to_rocq true) pl
   | Iff (lp, rp) -> wrapped @@
-    spf "%s <-> %s" (layout_prop_to_rocq false lp) (layout_prop_to_rocq false rp)
+    spf "%s <-> %s" (layout_prop_to_rocq true lp) (layout_prop_to_rocq true rp)
   | Forall { qv = { x; ty }; body } -> wrapped @@
     spf "forall (%s : %s), %s" x (layout_nt_to_rocq ty) (layout_prop_to_rocq false body)
   | Exists { qv = { x; ty }; body } -> wrapped @@

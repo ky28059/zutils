@@ -57,6 +57,13 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
     | cons x xs => ~(list_mem xs x) /\ uniq xs
     end.
   |});
+  ("all_evens", {|
+  Fixpoint all_evens (l : list Z) : Prop :=
+    match l with
+    | nil => True
+    | cons x xs => (exists n, x = 2 * n) /\ all_evens xs
+    end.
+  |});
   ("leaf", {|
   Definition leaf {a : Type} (t : tree a) : Prop :=
     match t with
@@ -159,6 +166,15 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
     - contradiction.
   Qed.
   |});
+  ("list_len_geq_0", {|
+  Lemma list_len_geq_0 : forall (l : list Z), forall (n : Z), len l n -> n >= 0.
+  Proof.
+    intros l.
+    induction l; intros n H; inversion H.
+    - intuition.
+    - apply IHl in H1. intuition.
+  Qed. 
+  |});
   ("list_positive_len_is_not_emp", {|
   Lemma list_positive_len_is_not_emp : forall (l : list Z), forall (n : Z), len l n /\ n > 0 -> ~emp l.
   Proof.
@@ -214,7 +230,7 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
 module StringSet = Set.Make(String)
 
 let builtins = StringSet.of_list [
-  "=="; "!="; "<"; "<="; ">"; ">="; "+"; "-"; "mod"; "True"; "False";
+  "=="; "!="; "<"; "<="; ">"; ">="; "+"; "-"; "*"; "/"; "mod"; "True"; "False";
   "Nil"; "Cons"; "Leaf"; "Node"; "None"; "Some"  (* Ignore custom constructors in proof file generation; TODO? *)
 ]
 
