@@ -57,6 +57,18 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
     | cons x xs => ~(list_mem xs x) /\ uniq xs
     end.
   |});
+  ("sorted", {|
+  Fixpoint sorted (l : list Z) : Prop :=
+    match l with
+    | nil => True
+    | cons x nil => True
+    | cons x xs =>
+      match xs with
+      | nil => True
+      | cons y _ => x <= y /\ sorted xs
+      end
+    end.
+  |});
   ("all_evens", {|
   Fixpoint all_evens (l : list Z) : Prop :=
     match l with
@@ -221,6 +233,28 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
     intros [| x] H.
     - reflexivity.
     - contradiction.
+  Qed.
+  |});
+  ("list_hd_sorted", {|
+  Lemma list_hd_sorted : forall (l : list Z) (l1 : list Z) (x : Z) (y : Z),
+    tl l l1 /\ sorted l -> emp l1 \/ ((hd l1 y /\ hd l x) -> (x <= y)).
+  Proof.
+    intros [| x1] [| y1] x y [Htl Hs]; try contradiction.
+    - left. reflexivity.
+    - right. intros [Hht Hhp].
+      inversion Htl. inversion Hht. inversion Hhp.
+      subst. simpl in Hs. intuition.
+  Qed.
+  |});
+  ("list_tl_sorted", {|
+  Lemma list_tl_sorted : forall (l : list Z) (l1 : list Z), tl l l1 /\ sorted l -> sorted l1.
+  Proof.
+    intros [| x] [| y] [Ht Hs];
+    try contradiction.
+    - reflexivity.
+    - inversion Ht. subst. simpl in Hs. destruct l0.
+      * reflexivity.
+      * simpl. intuition.
   Qed.
   |})
 ]
