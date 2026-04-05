@@ -76,6 +76,14 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
     | cons x xs => (exists n, x = 2 * n) /\ all_evens xs
     end.
   |});
+  ("depth", {|
+  Fixpoint depth {a : Type} (t : tree a) (n : Z) : Prop :=
+    match t with
+    | Leaf _ => n = 0
+    | Node _ _ l r => exists nl nr : Z, 
+      depth l nl /\ depth r nr /\ n = Z.max nl nr + 1
+    end.
+  |});
   ("leaf", {|
   Definition leaf {a : Type} (t : tree a) : Prop :=
     match t with
@@ -94,21 +102,49 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
   Definition lch {a : Type} (t : tree a) (l : tree a) : Prop :=
     match t with
     | Leaf _ => False
-    | Node _ _ lch _ => lch = l
+    | Node _ _ l1 _ => l1 = l
     end.
   |});
   ("rch", {|
   Definition rch {a : Type} (t : tree a) (r : tree a) : Prop :=
     match t with
     | Leaf _ => False
-    | Node _ _ _ rch => rch = r
+    | Node _ _ _ r1 => r1 = r
     end.
   |});
   ("tree_mem", {|
   Fixpoint tree_mem {a : Type} (t : tree a) (e : a) : Prop :=
     match t with
     | Leaf _ => False
-    | Node _ v lch rch => v = e \/ tree_mem lch e \/ tree_mem rch e
+    | Node _ v l r => v = e \/ tree_mem l e \/ tree_mem r e
+    end.
+  |});
+  ("complete", {|
+  Fixpoint complete {a : Type} (t : tree a) : Prop :=
+    match t with
+    | Leaf _ => True
+    | Node _ _ l r => complete l /\ complete r /\ (exists n, depth l n /\ depth r n)
+    end.
+  |});
+  ("lower_bound", {|
+  Fixpoint lower_bound (t : tree Z) (x : Z) : Prop :=
+    match t with
+    | Leaf _ => True
+    | Node _ y l r => x <= y /\ lower_bound l x /\ lower_bound r x
+    end.
+  |});
+  ("upper_bound", {|
+  Fixpoint upper_bound (t : tree Z) (x : Z) : Prop :=
+    match t with
+    | Leaf _ => True
+    | Node _ y l r => y <= x /\ upper_bound l x /\ upper_bound r x
+    end.
+  |});
+  ("bst", {|
+  Fixpoint bst (t : tree Z) : Prop :=
+    match t with
+    | Leaf _ => True
+    | Node _ x l r => bst l /\ bst r /\ upper_bound l x /\ lower_bound r x
     end.
   |})
 ]
@@ -233,6 +269,26 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
     intros [| x] H.
     - reflexivity.
     - contradiction.
+  Qed.
+  |});
+  ("list_tl_unique", {|
+  Lemma list_tl_unique : forall (l : list Z) (l1 : list Z), tl l l1 /\ uniq l -> uniq l1.
+  Proof.
+    intros [| x] l1 [Ht Hu].
+    - contradiction.
+    - simpl in Hu. destruct Hu.
+      inversion Ht. assumption.
+  Qed.
+  |});
+  ("list_hd_unique", {|
+  Lemma list_hd_unique : forall (l : list Z) (l1 : list Z) (x : Z),
+    tl l l1 /\ uniq l /\ hd l x -> ~ (list_mem l1 x).
+  Proof.
+    intros [| x] l1 x1 [Ht [Hu Hh]].
+    - contradiction.
+    - simpl in Hu. destruct Hu as [Htm Htu].
+      inversion Hh. inversion Ht.
+      assumption.
   Qed.
   |});
   ("list_hd_sorted", {|

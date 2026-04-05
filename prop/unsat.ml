@@ -38,6 +38,7 @@ let dump_unsat (ctx: Nt.t ctx) axioms prop =
     "From Stdlib Require Import String.";
     "From Stdlib Require Import Ascii.";
     "From Stdlib Require Import Floats.";
+    "From Stdlib Require Import Lia.";
     "Open Scope Z_scope."
   ] in
   let types = Rocqdefs.remove_builtins @@ ctx_to_list ctx in
