@@ -2,7 +2,8 @@ module Nt = Normalty
 open Sugar
 
 let built_in_type_sigs = [
-  "Parameter tree : forall (a : Type), Type."
+  "Parameter tree : forall (a : Type), Type.";
+  "Parameter rbtree : forall (a : Type), Type."
 ]
 
 let built_in_type_defs = [
@@ -11,6 +12,12 @@ let built_in_type_defs = [
   | Leaf : tree' a
   | Node : a -> tree' a -> tree' a -> tree' a.
   Definition tree := tree'.
+  |};
+  {|
+  Inductive rbtree' (a : Type) : Type :=
+  | Rbtleaf : rbtree' a
+  | Rbtnode : bool -> rbtree' a -> a -> rbtree' a -> rbtree' a.
+  Definition rbtree := rbtree'.
   |}
 ]
 
@@ -145,6 +152,66 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
     match t with
     | Leaf _ => True
     | Node _ x l r => bst l /\ bst r /\ upper_bound l x /\ lower_bound r x
+    end.
+  |});
+  ("num_black", {|
+  Fixpoint num_black {a : Type} (t : rbtree a) (h : Z) : Prop :=
+    match t with
+    | Rbtleaf _ => h = 0
+    | Rbtnode _ c l _ r =>
+      if c then num_black l (h - 1) /\ num_black r (h - 1)
+      else num_black l h /\ num_black r h
+    end.
+  |});
+  ("rb_leaf", {|
+  Definition rb_leaf {a : Type} (t : rbtree a) : Prop :=
+    match t with
+    | Rbtleaf _ => True
+    | Rbtnode _ _ _ _ _ => False
+    end.
+  |});
+  ("rb_root", {|
+  Definition rb_root {a : Type} (t : rbtree a) (x : a) : Prop :=
+    match t with
+    | Rbtleaf _ => False
+    | Rbtnode _ _ _ y _ => x = y
+    end.
+  |});
+  ("rb_lch", {|
+  Definition rb_lch {a : Type} (t : rbtree a) (l : rbtree a) : Prop :=
+    match t with
+    | Rbtleaf _ => False
+    | Rbtnode _ _ l1 _ _ => l = l1
+    end.
+  |});
+  ("rb_rch", {|
+  Definition rb_rch {a : Type} (t : rbtree a) (r : rbtree a) : Prop :=
+    match t with
+    | Rbtleaf _ => False
+    | Rbtnode _ _ _ _ r1 => r = r1
+    end.
+  |});
+  ("no_red_red", {|
+  Fixpoint no_red_red {a : Type} (t : rbtree a) : Prop :=
+    match t with
+    | Rbtleaf _ => True
+    | Rbtnode _ c l _ r =>
+      if negb c then no_red_red l /\ no_red_red r
+      else
+        match (l, r) with
+        | (Rbtnode _ c' _ _ _, Rbtnode _ c'' _ _ _) =>
+          (c' = false) /\ (c'' = false) /\ no_red_red l /\ no_red_red r
+        | (Rbtnode _ c' _ _ _, Rbtleaf _) => (c' = false) /\ no_red_red l
+        | (Rbtleaf _, Rbtnode _ c'' _ _ _) => (c'' = false) /\ no_red_red r
+        | (Rbtleaf _, Rbtleaf _) => True
+        end
+    end.
+  |});
+  ("rb_root_color", {|
+  Definition rb_root_color {a : Type} (t : rbtree a) (c : Prop) : Prop :=
+    match t with
+    | Rbtleaf _ => False
+    | Rbtnode _ c1 _ _ _ => (c /\ c1 = true) \/ (~c /\ c1 = false)
     end.
   |})
 ]
@@ -319,7 +386,7 @@ module StringSet = Set.Make(String)
 
 let builtins = StringSet.of_list [
   "=="; "!="; "<"; "<="; ">"; ">="; "+"; "-"; "*"; "/"; "mod"; "True"; "False";
-  "Nil"; "Cons"; "Leaf"; "Node"; "None"; "Some"  (* Ignore custom constructors in proof file generation; TODO? *)
+  "Nil"; "Cons"; "Leaf"; "Node"; "None"; "Some"; "Rbtleaf"; "Rbtnode"  (* Ignore custom constructors in proof file generation; TODO? *)
 ]
 
 let remove_builtins (types : (Nt.t, string) typed list) =

@@ -2,8 +2,8 @@ open Typectx
 open Sugar
 open Front
 
-let mk_signature_module preds axioms = (* TODO: indent? *)
-  let types = String.concat "\n" @@ Rocqdefs.built_in_type_sigs in
+let mk_signature_module preds axioms = (* TODO: only include types referenced in query? *)
+  let types = String.concat "\n" @@ List.map ((^) "  ") Rocqdefs.built_in_type_sigs in
   let defs = String.concat "\n" @@ List.map
     (fun { x; ty } -> spf "  Parameter %s : %s." x @@ layout_nt_to_rocq ty)
     preds in
@@ -13,7 +13,7 @@ let mk_signature_module preds axioms = (* TODO: indent? *)
   spf "Module Type Signatures.\n%s\nEnd Signatures."
     @@ String.concat "\n\n" [types; defs; axs]
 
-let mk_axioms_module preds axioms = (* TODO: indent? *)
+let mk_axioms_module preds axioms =
   let layout_builtin { x; ty } =
     match Hashtbl.find_opt Rocqdefs.built_in_defs x with
     | Some x -> "  " ^ String.trim x
