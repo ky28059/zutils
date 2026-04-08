@@ -159,8 +159,8 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
     match t with
     | Rbtleaf _ => h = 0
     | Rbtnode _ c l _ r =>
-      if c then num_black l (h - 1) /\ num_black r (h - 1)
-      else num_black l h /\ num_black r h
+      if c then num_black l h /\ num_black r h
+      else num_black l (h - 1) /\ num_black r (h - 1)
     end.
   |});
   ("rb_leaf", {|
