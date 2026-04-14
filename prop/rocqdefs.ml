@@ -208,10 +208,10 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
     end.
   |});
   ("rb_root_color", {|
-  Definition rb_root_color {a : Type} (t : rbtree a) (c : Prop) : Prop :=
+  Definition rb_root_color {a : Type} (t : rbtree a) (c : bool) : Prop :=
     match t with
     | Rbtleaf _ => False
-    | Rbtnode _ c1 _ _ _ => (c /\ c1 = true) \/ (~c /\ c1 = false)
+    | Rbtnode _ c1 _ _ _ => c = c1
     end.
   |})
 ]
