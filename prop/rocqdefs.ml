@@ -137,14 +137,14 @@ let built_in_defs = Hashtbl.of_seq @@ List.to_seq [
   Fixpoint lower_bound (t : tree Z) (x : Z) : Prop :=
     match t with
     | Leaf _ => True
-    | Node _ y l r => x <= y /\ lower_bound l x /\ lower_bound r x
+    | Node _ y l r => x < y /\ lower_bound l x /\ lower_bound r x
     end.
   |});
   ("upper_bound", {|
   Fixpoint upper_bound (t : tree Z) (x : Z) : Prop :=
     match t with
     | Leaf _ => True
-    | Node _ y l r => y <= x /\ upper_bound l x /\ upper_bound r x
+    | Node _ y l r => y < x /\ upper_bound l x /\ upper_bound r x
     end.
   |});
   ("bst", {|
