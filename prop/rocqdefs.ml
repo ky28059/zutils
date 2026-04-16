@@ -385,7 +385,7 @@ let built_in_proofs = Hashtbl.of_seq @@ List.to_seq [
 module StringSet = Set.Make(String)
 
 let builtins = StringSet.of_list [
-  "=="; "!="; "<"; "<="; ">"; ">="; "+"; "-"; "*"; "/"; "mod"; "True"; "False";
+  "=="; "!="; "<"; "<="; ">"; ">="; "+"; "-"; "*"; "/"; "mod"; "not"; "true"; "false"; "True"; "False";
   "Nil"; "Cons"; "Leaf"; "Node"; "None"; "Some"; "Rbtleaf"; "Rbtnode"  (* Ignore custom constructors in proof file generation; TODO? *)
 ]
 
